@@ -4,11 +4,10 @@ using UnityEngine;
 
 public class MS_CubeMaker : MonoBehaviour {
 
-    public float m_OffsetVal = 3;
-    public Material testingMat;
-    [Space]
+
     public GameObject m_ColorEffect;
-    public GameObject m_BoomEffect;
+    public float m_OffsetVal = 3;
+
 
 
     private GameObject m_holder;
@@ -20,33 +19,13 @@ public class MS_CubeMaker : MonoBehaviour {
     private int m_MaxMines;
     private float m_GameDiameter;
 
-    /*
-         * 
-         * 
-         * COLORFUL Minesweeper
-         * 
-         * Farther away from a singular bomb, 
-         * More red-shifted.
-         * 
-         * Start out everyone black, hover over is dark grey. 
-         * 
-         * 
-         * 
-         * 
-         */
-
-
     // Use this for initialization
     void Start () {
 
         m_AllCubes = new List<GameObject>();
         m_AllEffects = new List<GameObject>();
     }
-	
-	// Update is called once per frame
-	void Update () {
-		
-	}
+
 
     public List<GameObject> MakeCubes(GameObject f_cube, GameObject f_holder, int f_size, int f_mines)
     {
@@ -60,56 +39,19 @@ public class MS_CubeMaker : MonoBehaviour {
                 for (var k = 0; k < f_size; k++)                {
 
                     GameObject newCube = Instantiate(f_cube, f_holder.transform);
-                    //GameObject particleColor = Instantiate(m_ColorEffect, f_holder.transform);
                     
                     m_AllCubes.Add(newCube);
                     newCube.name = "Cube " + (m_AllCubes.Count - 1);
                     newCube.transform.localPosition = new Vector3(i * cubeOffset, j * cubeOffset, k * cubeOffset);
-                    newCube.GetComponent<MeshRenderer>().material = this.gameObject.GetComponent<MS_Main>().m_InactiveCubeMat;
+                    newCube.AddComponent<MS_Block>();
 
-                    newCube.GetComponent<MS_Block>().SetParticleSystem(m_ColorEffect);
-
-                    //m_AllEffects.Add(particleColor);
-                    //particleColor.name = "Effect System " + (m_AllCubes.Count - 1);
-                    //particleColor.transform.localPosition = new Vector3(i * cubeOffset, j * cubeOffset, k * cubeOffset);
-                    //particleColor.GetComponent<ParticleSystem>().Stop();
+                    newCube.
+                        GetComponent<MS_Block>().
+                        SetParticleSystem
+                        (m_ColorEffect);
                 }
             }
         }
-
-        /*
-        //translate to center - 
-        //get size of cube. 
-        print("One Cube Bounds: " + f_cube.GetComponent<MeshRenderer>().bounds);
-
-        float objSize = f_cube.GetComponent<MeshRenderer>().bounds.extents.x;
-
-        print("Given Size: " + objSize);
-        print("Given Offset: " + cubeOffset);
-
-        float length = (objSize + cubeOffset) * f_size;
-
-        print("Calculated Length: " + length);
-
-
-        for (var i = 0; i < m_allCubes.Count; i++)
-        {
-            Vector3 PositionCorrection = new Vector3(
-            //m_allCubes[i].transform.localPosition.x - length,
-            m_allCubes[i].transform.localPosition.x,
-            //m_allCubes[i].transform.localPosition.y - length,
-            m_allCubes[i].transform.localPosition.y,
-            m_allCubes[i].transform.localPosition.z - length
-            //m_allCubes[i].transform.localPosition.z
-            );
-
-            m_allCubes[i].transform.localPosition = PositionCorrection;
-
-            print("Cube #" + i + " corrected position: " + PositionCorrection);
-        }
-        */
-
-
 
         m_GameDiameter = Vector3.Distance(m_AllCubes[0].transform.position, m_AllCubes[m_AllCubes.Count - 1].transform.position);
         print("Farthest distance possible from block to block: " + m_GameDiameter);
@@ -120,7 +62,6 @@ public class MS_CubeMaker : MonoBehaviour {
         return m_AllCubes;
         
     }
-
 
 
     private void PlaceMines()
@@ -141,7 +82,6 @@ public class MS_CubeMaker : MonoBehaviour {
                     bombNumArray.Add(bombNum);
                     m_AllCubes[bombNum].AddComponent<MS_Bomb>();
                     m_AllCubes[bombNum].name = "Bomb! #" + bombNum;
-                    m_AllCubes[bombNum].GetComponent<MS_Block>().SetParticleSystem(m_BoomEffect);
                     m_MinesPlaced++;
                 }
             }
@@ -168,33 +108,27 @@ public class MS_CubeMaker : MonoBehaviour {
                 }
             }
 
-            //Normalize distance to each bomb and add color gradient 
-            //if (m_AllCubes[i].GetComponent<MS_Bomb>() == true)
-            //{
-                //m_AllCubes[i].GetComponent<MeshRenderer>().material.color = Color.red;
-            //}
-            //else
-            //{
-                float normalizedVal; //Distance value clamped to range of AlphaColor to BetaColor
-                float AlphaColor = 0f; //Lower values = more red shifted all cubes are.
-                float BetaColor = 1f; //Higher values = more blue shifted all cubes are.
+            float normalizedVal; //Distance value clamped to range of AlphaColor to BetaColor
+            float AlphaColor = 0f; //Lower values = more red shifted all cubes are.
+            float BetaColor = 1f; //Higher values = more blue shifted all cubes are.
                 
-                normalizedVal =  // result = (input - input.max) * ((output.min - output.max) / (output.min - input.max)) + output.max;
-                    (m_AllCubes[i].GetComponent<MS_Block>().distanceToBomb - m_GameDiameter) *
-                    ((AlphaColor - BetaColor) / (AlphaColor - m_GameDiameter)) + BetaColor;
+            normalizedVal =  // result = (input - input.max) * ((output.min - output.max) / (output.min - input.max)) + output.max;
+                (m_AllCubes[i].GetComponent<MS_Block>().distanceToBomb - m_GameDiameter) *
+                ((AlphaColor - BetaColor) / (AlphaColor - m_GameDiameter)) + BetaColor;
 
-                Color currentColor = Color.HSVToRGB(normalizedVal, 1f, 1f); //HSV Conversion, HSV uses 0-1 scale on single value to run through entire rainbow.
+            Color currentColor = Color.HSVToRGB(normalizedVal, 1f, 1f); //HSV Conversion, HSV uses 0-1 scale on single value to run through entire rainbow.
 
-                //m_AllCubes[i].GetComponent<MeshRenderer>().material.color = currentColor; //Setting color
-                m_AllCubes[i].GetComponent<MS_Block>().materialColor = currentColor; //Setting color value for control later.
-            //}
+            //m_AllCubes[i].GetComponent<MeshRenderer>().material.color = currentColor; //Setting color
+            m_AllCubes[i].GetComponent<MS_Block>().materialColor = currentColor; //Setting color value for control later.
         }
     }
+
 
     public void ResetPlacedMine()
     {
         m_MinesPlaced = 0;
     }
+
 
     public List<GameObject> GrabEffects()
     {

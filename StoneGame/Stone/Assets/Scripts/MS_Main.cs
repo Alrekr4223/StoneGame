@@ -6,23 +6,14 @@ public class MS_Main : MonoBehaviour {
 
     public GameObject m_Player;
     [Space]
-    public GameObject m_CubeHolder;
-    public GameObject m_CubePref;
-    public int m_cubeSize;
-    [Space]
-    public int m_BombAmount;
-    public GameObject m_FlagHolder;
+    public GameObject m_CubePrefab;
     public GameObject m_FlagPref;
-    [Space]
-    public Material m_ActiveCubeMat;
-    public Material m_InactiveCubeMat;
-    [Space]
-    public GameObject m_MSText;
-    public GameObject m_StartBtn;
-    [Space]
-    public GameObject m_ColorEffect;
+    public int m_CubeScale = 5;
+    public int m_BombAmount = 1;
 
     private GameObject m_CurrentBlock;
+    private GameObject m_FlagHolder;
+    private GameObject m_CubeHolder;
     private List<GameObject> m_AllCubes;
     private List<GameObject> m_RemovedCubes;
     private List<GameObject> m_AllColorEffects;
@@ -40,39 +31,21 @@ public class MS_Main : MonoBehaviour {
         m_RemovedCubes = new List<GameObject>();
         m_AllColorEffects = new List<GameObject>();
         m_Flags = new List<GameObject>();
+
+        m_CubeHolder = new GameObject();
+        m_CubeHolder.transform.parent = this.transform;
+        m_FlagHolder = new GameObject();
+        m_FlagHolder.transform.parent = this.transform;
     }
 	
 	void Update () {
 
 
-        if (FP_Raycast.Update() != null)
+        //if (FP_Raycast.Update() != null && Input.GetKeyDown(KeyCode.Space))
+        if (Input.GetKeyDown(KeyCode.Space))
         {
-            if (m_StartBtn == FP_Raycast.Update() && Input.GetButtonDown("Fire1")) //Start Game
-            {
-                m_GameStarted = true;       //Move forward in Update.
-                m_MSText.SetActive(true);   //Overlay Text. Not currently avalible
-                m_AllCubes = this.GetComponent<MS_CubeMaker>().MakeCubes(m_CubePref, m_CubeHolder, m_cubeSize, m_BombAmount); //Make Cubes
-
-                MakeFlags();
-                
-                print("Amount of Cubes: " + m_AllCubes.Count);
-
-                for (var i = 0; i < m_AllCubes.Count; i++)
-                {
-                    m_AllCubes[i].GetComponent<MS_Block>().arrayIndex = i;
-
-
-                    GameObject PS = Instantiate(m_AllCubes[i].GetComponent<MS_Block>().particleEffect, m_CubeHolder.transform);
-                    PS.name = "ParticleSystem for #" + i;
-                    PS.GetComponent<ParticleSystem>().startColor = m_AllCubes[i].GetComponent<MS_Block>().materialColor;
-                    PS.GetComponent<ParticleSystem>().Stop();
-                    PS.transform.localPosition = m_AllCubes[i].transform.localPosition;
-                    m_AllColorEffects.Add(PS);
-
-                    m_AllCubes[i].GetComponent<MS_Block>().particleEffect = PS;
-
-                }
-            }
+            Debug.Log("Starting Game");
+            StartGame();
         }
 
         
@@ -189,6 +162,33 @@ public class MS_Main : MonoBehaviour {
     }
 
 
+    private void StartGame()
+    {
+        m_GameStarted = true;       //Move forward in Update.
+        m_AllCubes = this.GetComponent<MS_CubeMaker>().MakeCubes(m_CubePrefab, m_CubeHolder, m_CubeScale, m_BombAmount); //Make Cubes
+
+        MakeFlags();
+
+        print("Amount of Cubes: " + m_AllCubes.Count);
+
+        for (var i = 0; i < m_AllCubes.Count; i++)
+        {
+            m_AllCubes[i].GetComponent<MS_Block>().arrayIndex = i;
+
+
+            GameObject PS = Instantiate(m_AllCubes[i].GetComponent<MS_Block>().particleEffect, m_CubeHolder.transform);
+            PS.name = "ParticleSystem for #" + i;
+            PS.GetComponent<ParticleSystem>().startColor = m_AllCubes[i].GetComponent<MS_Block>().materialColor;
+            PS.GetComponent<ParticleSystem>().Stop();
+            PS.transform.localPosition = m_AllCubes[i].transform.localPosition;
+            m_AllColorEffects.Add(PS);
+
+            m_AllCubes[i].GetComponent<MS_Block>().particleEffect = PS;
+
+        }
+    }
+
+
 
     private void MakeFlags()
     {
@@ -247,7 +247,6 @@ public class MS_Main : MonoBehaviour {
 
     private void EndGame()
     {
-        m_MSText.SetActive(false);
         this.GetComponent<MS_CubeMaker>().ResetPlacedMine();
         foreach (GameObject obj in m_AllCubes)
         {
