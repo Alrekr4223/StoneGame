@@ -9,7 +9,7 @@ public class MS_CubeMaker : MonoBehaviour {
     public float m_OffsetVal = 3;
 
 
-
+    private Bounds m_CubeHolderBounds;
     private GameObject m_holder;
 
     private List<GameObject> m_AllCubes;
@@ -32,7 +32,9 @@ public class MS_CubeMaker : MonoBehaviour {
         print("Found Cube Prefab: " + f_cube.name + "  Cube size is: " + f_cube.transform.localScale);
         
         m_MaxMines = f_mines;
-        float cubeOffset = (f_cube.transform.localScale.x / m_OffsetVal);
+        float cubeOffset = (f_cube.transform.localScale.x * m_OffsetVal);
+
+        m_CubeHolderBounds = new Bounds(f_holder.transform.localPosition, Vector3.zero);
 
         for (var i = 0; i < f_size; i++)        {
             for (var j = 0; j < f_size; j++)            {
@@ -45,10 +47,10 @@ public class MS_CubeMaker : MonoBehaviour {
                     newCube.transform.localPosition = new Vector3(i * cubeOffset, j * cubeOffset, k * cubeOffset);
                     newCube.AddComponent<MS_Block>();
 
-                    newCube.
-                        GetComponent<MS_Block>().
-                        SetParticleSystem
-                        (m_ColorEffect);
+                    newCube.GetComponent<MS_Block>().SetParticleSystem(m_ColorEffect);
+
+
+                    m_CubeHolderBounds.Encapsulate(newCube.transform.localPosition);
                 }
             }
         }
@@ -60,7 +62,10 @@ public class MS_CubeMaker : MonoBehaviour {
         ColorCalculation();
         
         return m_AllCubes;
+
+
         
+
     }
 
 
@@ -133,5 +138,12 @@ public class MS_CubeMaker : MonoBehaviour {
     public List<GameObject> GrabEffects()
     {
         return m_AllEffects;
+    }
+
+
+    public float GetCubeHolderBoundsExtents()
+    {
+        Debug.Log("Holder Bounds: " + m_CubeHolderBounds.extents);
+        return m_CubeHolderBounds.extents.x;
     }
 }

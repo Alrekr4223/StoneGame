@@ -7,13 +7,13 @@ public class MS_Main : MonoBehaviour {
     public GameObject m_Player;
     [Space]
     public GameObject m_CubePrefab;
-    public GameObject m_FlagPref;
+    //public GameObject m_FlagPref;
     public int m_CubeScale = 5;
     public int m_BombAmount = 1;
+    public float m_RotationSpeed = 5;
 
     private GameObject m_CurrentBlock;
-    private GameObject m_FlagHolder;
-    private GameObject m_CubeHolder;
+    private GameObject m_AllCubesHolder;
     private List<GameObject> m_AllCubes;
     private List<GameObject> m_RemovedCubes;
     private List<GameObject> m_AllColorEffects;
@@ -26,30 +26,29 @@ public class MS_Main : MonoBehaviour {
 
 
     void Start () {
-
-
         m_RemovedCubes = new List<GameObject>();
         m_AllColorEffects = new List<GameObject>();
         m_Flags = new List<GameObject>();
 
-        m_CubeHolder = new GameObject();
-        m_CubeHolder.transform.parent = this.transform;
-        m_FlagHolder = new GameObject();
-        m_FlagHolder.transform.parent = this.transform;
+        m_AllCubesHolder = new GameObject();
+        m_AllCubesHolder.transform.parent = this.transform;
+        m_AllCubesHolder.name = "Cube Holder";
+
+        Camera.main.transform.LookAt(this.transform);
     }
 	
 	void Update () {
 
 
         //if (FP_Raycast.Update() != null && Input.GetKeyDown(KeyCode.Space))
-        if (Input.GetKeyDown(KeyCode.Space))
+        if (Input.GetKeyDown(KeyCode.Space) && !m_GameStarted)
         {
             Debug.Log("Starting Game");
             StartGame();
         }
 
         
-
+        
         if (m_GameStarted) //Game has begun
         {
             if (FP_Raycast.Update() != null)
@@ -100,30 +99,6 @@ public class MS_Main : MonoBehaviour {
                         }                        
                     }
                 }
-
-
-                //Mouse to Flag Interaction
-                if (FP_Raycast.Update() != null && FP_Raycast.Update().GetComponent<MS_Flag>() != null)
-                {
-                    GameObject Flag = FP_Raycast.Update();
-
-                    if (Input.GetButton("Fire1"))
-                    {
-                        //grabbed flag
-                        Flag.GetComponent<Rigidbody>().isKinematic = true;
-                        Flag.transform.parent = m_Player.GetComponentInChildren<Camera>().gameObject.transform;
-                        
-
-                    }
-                    else
-                    {
-                        Flag.transform.parent = m_FlagHolder.transform;
-                        if (Flag.GetComponent<Rigidbody>())
-                        {
-                            Flag.GetComponent<Rigidbody>().isKinematic = false;
-                        }                        
-                    }
-                }
             }
 
             
@@ -132,22 +107,28 @@ public class MS_Main : MonoBehaviour {
             {
                 StartCoroutine(ShowParticles()); //Shows particles for X seconds, then turns off particles 
             }
-            if (Input.GetKey(KeyCode.E)) //Rotates the game along the +X axis
+            if (Input.GetKey(KeyCode.D)) //Rotates the game along the +X axis
             {
-                Vector3 newRot = new Vector3(
-                    m_CubeHolder.transform.rotation.x + m_RotSpeed, 
-                    m_CubeHolder.transform.rotation.y, 
-                    m_CubeHolder.transform.rotation.z);
-                m_CubeHolder.transform.rotation = Quaternion.Euler(newRot);
+                Camera.main.transform.LookAt(this.transform);
+                Camera.main.transform.Translate(Vector3.right * Time.deltaTime * m_RotationSpeed);
             }
 
-            if (Input.GetKey(KeyCode.Q)) //Rotates the game along the -X axis
+            if (Input.GetKey(KeyCode.A)) //Rotates the game along the -X axis
             {
-                Vector3 newRot = new Vector3(
-                    m_CubeHolder.transform.rotation.x - m_RotSpeed,
-                    m_CubeHolder.transform.rotation.y,
-                    m_CubeHolder.transform.rotation.z);
-                m_CubeHolder.transform.rotation = Quaternion.Euler(newRot);
+                Camera.main.transform.LookAt(this.transform);
+                Camera.main.transform.Translate(Vector3.left * Time.deltaTime * m_RotationSpeed);
+            }
+
+            if (Input.GetKey(KeyCode.W)) //Rotates the game along the +Z axis
+            {
+                Camera.main.transform.LookAt(this.transform);
+                Camera.main.transform.Translate(Vector3.up * Time.deltaTime * m_RotationSpeed);
+            }
+
+            if (Input.GetKey(KeyCode.S)) //Rotates the game along the -Z axis
+            {
+                Camera.main.transform.LookAt(this.transform);
+                Camera.main.transform.Translate(Vector3.down * Time.deltaTime * m_RotationSpeed);
             }
 
             if (Input.GetKeyDown(KeyCode.F)) //End Game
@@ -159,15 +140,21 @@ public class MS_Main : MonoBehaviour {
                 ShowTempSolution();
             }
         }
+        
     }
 
 
     private void StartGame()
     {
         m_GameStarted = true;       //Move forward in Update.
-        m_AllCubes = this.GetComponent<MS_CubeMaker>().MakeCubes(m_CubePrefab, m_CubeHolder, m_CubeScale, m_BombAmount); //Make Cubes
 
-        MakeFlags();
+        m_AllCubesHolder.transform.localPosition = Vector3.zero; //Reset holder back to zero, for when game restarts
+        m_AllCubes = this.GetComponent<MS_CubeMaker>().MakeCubes(m_CubePrefab, m_AllCubesHolder, m_CubeScale, m_BombAmount); //Make Cubes
+        float width = this.GetComponent<MS_CubeMaker>().GetCubeHolderBoundsExtents(); //Grab the size of the cubes as a whole
+        Vector3 cur = m_AllCubesHolder.transform.localPosition; //easier to read 'cur' in below line than the whole position.
+        m_AllCubesHolder.transform.localPosition = new Vector3(cur.x - width, cur.y - width, cur.z - width);  // Reset holder position to center of parent
+
+        //MakeFlags();
 
         print("Amount of Cubes: " + m_AllCubes.Count);
 
@@ -176,7 +163,7 @@ public class MS_Main : MonoBehaviour {
             m_AllCubes[i].GetComponent<MS_Block>().arrayIndex = i;
 
 
-            GameObject PS = Instantiate(m_AllCubes[i].GetComponent<MS_Block>().particleEffect, m_CubeHolder.transform);
+            GameObject PS = Instantiate(m_AllCubes[i].GetComponent<MS_Block>().particleEffect, m_AllCubesHolder.transform);
             PS.name = "ParticleSystem for #" + i;
             PS.GetComponent<ParticleSystem>().startColor = m_AllCubes[i].GetComponent<MS_Block>().materialColor;
             PS.GetComponent<ParticleSystem>().Stop();
@@ -189,7 +176,8 @@ public class MS_Main : MonoBehaviour {
     }
 
 
-
+    //Unused
+    /*
     private void MakeFlags()
     {
         float flagOffset = 0.5f;
@@ -202,9 +190,8 @@ public class MS_Main : MonoBehaviour {
             m_Flags.Add(currentFlag);
         }        
 
-    }
-
-
+    }*/
+    
 
 
     private IEnumerator ShowParticles()
@@ -247,6 +234,7 @@ public class MS_Main : MonoBehaviour {
 
     private void EndGame()
     {
+        m_GameStarted = false;
         this.GetComponent<MS_CubeMaker>().ResetPlacedMine();
         foreach (GameObject obj in m_AllCubes)
         {
@@ -269,9 +257,6 @@ public class MS_Main : MonoBehaviour {
         m_RemovedCubes.Clear();
         m_AllColorEffects.Clear();
     }
-
-
-
 
 
     public void FlagFoundBomb()
