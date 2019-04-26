@@ -42,10 +42,6 @@ public class MS_Main : MonoBehaviour {
         m_AllCubesHolder.name = "Cube Holder";
 
         Camera.main.transform.LookAt(this.transform);
-
-
-        
-
     }
 
     private void StartGame()
@@ -120,20 +116,24 @@ public class MS_Main : MonoBehaviour {
                 FindObjectOfType<MS_Main>().RaycastCube(hit.transform.gameObject);
             }
         }
+
+
+        this.GetComponent<ChuckConversions>().SetAllCubes(m_AllCubes);
     }
 
 
 
-    public void ChunityStrum() //TODO, send in color value to SelectionFX().
+    public void ChunityStrum(float note, float length) //TODO, send in color value to SelectionFX().
     {
+        Debug.Log("Note: " + note + ", length: " + length);
         //Chuck + Unity -> Chunity, Interactive Audio
-        this.GetComponent<ChuckSubInstance>().RunCode(@"
+        this.GetComponent<ChuckSubInstance>().RunCode( string.Format(@"
 
             Mandolin m => dac;
 
 
             function void strumMandolin ( float freq, float detune, float body, float pluckpos, float length )
-            {
+            {{
                 freq => m.freq;
                 detune => m.stringDetune;
                 body => m.bodySize;
@@ -142,19 +142,19 @@ public class MS_Main : MonoBehaviour {
                 1.0 => m.noteOn;
 
                 length::second => now;
-            } 
+            }}
 
-            function void SelectionFX(float masterNote, float length){
+            function void SelectionFX(float masterNote, float length){{
 
                 strumMandolin (masterNote, 0.05, 0.25, 0.5, length);
                 //strumMandolin (masterNote - 100, 0.05, 0.25, 0.5, length);
                 //strumMandolin (masterNote + 50, 0.05, 0.25, 0.5, length);
-            }
+            }}
 
 
-            SelectionFX(500, 0.12);
+            SelectionFX({0}, {1});
 
-        ");
+        ", note, length));
     }
     
 
@@ -169,11 +169,16 @@ public class MS_Main : MonoBehaviour {
                 {
                     m_AllCubes[i].GetComponent<MeshRenderer>().material = m_hoverCubeMat; // HOVER EFFECT
                 }
+
+                if (Input.GetKeyDown(KeyCode.Space)) //Set 'Flag'
+                {
+                    Debug.Log("Setting Flag");
+                }
                 
 
                 if (Input.GetButtonUp("Fire1")) //Click on cube
                 {
-                    ChunityStrum();
+                    
 
                     if (m_AllCubes[i].GetComponent<MS_Bomb>())
                     {
@@ -189,6 +194,10 @@ public class MS_Main : MonoBehaviour {
 
                     m_AllCubes[i].SetActive(false); //Turn off cube
                     m_RemovedCubes.Add(m_AllCubes[i]); //send cube to array containing all cubes that have been turned off.
+
+                    //Make noise on object clicked
+                    float note = this.GetComponent<ChuckConversions>().ColorToFreqency(m_AllCubes[i].GetComponent<MS_Block>().distanceToBomb);
+                    ChunityStrum(note, 1.4f);
                 }
             }
             else //Set all other active cubes to reset material after hovered and not clicked

@@ -17,12 +17,7 @@ public class MS_Block : MonoBehaviour {
     public GameObject particleEffect;
 
     public int arrayIndex;
-
-
-
     
-
-
 
     // Use this for initialization
     void Start () {

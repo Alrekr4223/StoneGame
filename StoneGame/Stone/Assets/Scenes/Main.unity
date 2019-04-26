@@ -125,6 +125,7 @@ GameObject:
   - component: {fileID: 138705038}
   - component: {fileID: 138705042}
   - component: {fileID: 138705041}
+  - component: {fileID: 138705043}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -162,7 +163,7 @@ MonoBehaviour:
     type: 2}
   m_idleCubeMat: {fileID: 2100000, guid: 5add73f8830d5b14faf6291e3b11a749, type: 2}
   m_hoverCubeMat: {fileID: 2100000, guid: 3166e29a68794744b92ae0f62b581ce9, type: 2}
-  m_Gamesize: 7
+  m_Gamesize: 8
   m_BombAmount: 2
   m_RotationSpeed: 5
 --- !u!4 &138705040
@@ -286,6 +287,17 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!114 &138705043
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 138705037}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56e9a5535c26ae54abf89694a8324f68, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &170076733
 GameObject:
   m_ObjectHideFlags: 0
