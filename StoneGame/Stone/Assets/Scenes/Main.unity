@@ -162,8 +162,8 @@ MonoBehaviour:
     type: 2}
   m_idleCubeMat: {fileID: 2100000, guid: 5add73f8830d5b14faf6291e3b11a749, type: 2}
   m_hoverCubeMat: {fileID: 2100000, guid: 3166e29a68794744b92ae0f62b581ce9, type: 2}
-  m_CubeScale: 7
-  m_BombAmount: 1
+  m_Gamesize: 7
+  m_BombAmount: 2
   m_RotationSpeed: 5
 --- !u!4 &138705040
 Transform:
@@ -1026,6 +1026,7 @@ GameObject:
   - component: {fileID: 534669903}
   - component: {fileID: 534669906}
   - component: {fileID: 534669907}
+  - component: {fileID: 534669908}
   m_Layer: 0
   m_Name: Camera
   m_TagString: MainCamera
@@ -1105,14 +1106,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: affd0c719e0b1ae41a5f9a8361b47a39, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  target: {fileID: 138705040}
-  distance: 7
+  m_GameManager: {fileID: 138705040}
   xSpeed: 20
   ySpeed: 80
   yMinLimit: -80
   yMaxLimit: 80
-  distanceMin: 4
-  distanceMax: 15
 --- !u!65 &534669907
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1125,6 +1123,18 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &534669908
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 534669902}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ff26db721962cdf4a8edcdfa9a767d2a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  profile: {fileID: 11400000, guid: 69c7545dc0b73224ca3dfd69f3929c06, type: 2}
 --- !u!1 &595089097
 GameObject:
   m_ObjectHideFlags: 0
