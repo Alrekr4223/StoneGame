@@ -13,7 +13,6 @@ public class FP_Raycast : MonoBehaviour
         
         if (Physics.Raycast(origin, direction, out rHit))
         {
-            //print("Raycast Found GameObject: " + rHit.collider.gameObject);
             return rHit.collider.gameObject;
                 
         }
