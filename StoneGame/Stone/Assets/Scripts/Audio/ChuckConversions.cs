@@ -34,8 +34,8 @@ public class ChuckConversions : MonoBehaviour {
     public float ColorToFreqency(float distanceToBomb)
     {
 
-        float minFreq = 200;
-        float maxFreq = 600;        
+        float minFreq = 40;
+        float maxFreq = 90;        
 
         float normalizedVal = Remap(distanceToBomb, minDistance, maxDistance, maxFreq, minFreq);
 
