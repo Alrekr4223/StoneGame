@@ -30,6 +30,8 @@ public class MS_Main : MonoBehaviour {
     private Vector2 mouseCursDragPos;
     private bool mouseDragging = false;
 
+    private ChuckActions m_Chuck;
+
 
 
     void Start () {
@@ -42,6 +44,8 @@ public class MS_Main : MonoBehaviour {
         m_AllCubesHolder.name = "Cube Holder";
 
         Camera.main.transform.LookAt(this.transform);
+
+        m_Chuck = this.gameObject.AddComponent<ChuckActions>();
     }
 
     private void StartGame()
@@ -85,11 +89,11 @@ public class MS_Main : MonoBehaviour {
         {
             Debug.Log("Starting Game");
             StartGame();
+            return;
         }
 
 
         RotateGame();
-
 
 
         if (Input.GetKeyDown(KeyCode.Tab))
@@ -103,7 +107,6 @@ public class MS_Main : MonoBehaviour {
             ShowObjectSolution(); //Cheats. Shows solution to game by swapping all objects to their color values.
             m_GameEnded = true;
         }
-        
 
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         RaycastHit hit;
@@ -117,95 +120,12 @@ public class MS_Main : MonoBehaviour {
             }
         }
 
-
         this.GetComponent<ChuckConversions>().SetAllCubes(m_AllCubes);
     }
 
 
 
-    public void ChunityStrum(float note, float length) //TODO, send in color value to SelectionFX().
-    {
-
-
-        Debug.Log("Note: " + note + ", length: " + length);
-        //Chuck + Unity -> Chunity, Interactive Audio
-        this.GetComponent<ChuckSubInstance>().RunCode( string.Format(@"
-
-            Mandolin m => dac;
-            
-            //Dorian Scale
-            [0,0,2,3,3,5,5,7,7,9,9,10] @=> int Dorian[];
-
-            //Lydian
-            [0,2,4,6,7,9,11,12,14,16,18,19]  @=> int Lydian[];
-            
-            {0} $ int => int MidiCasted;
-            MidiCasted % 12 => int MidiModulus;
-            MidiCasted / 12 => int octave;
-            
-            Lydian[MidiModulus] => int ScaleNote;
-            ScaleNote + (12*octave) => int OctiveNote;
-
-            Std.mtof(OctiveNote) => float Freq;
-            Freq $ int => int NoteToPlay;
-
-            function void strumMandolin ( float freq, float detune, float body, float pluckpos, float length )
-            {{
-                freq => m.freq;
-                detune => m.stringDetune;
-                body => m.bodySize;
-                pluckpos => m.pluckPos;  //good to change
-
-                0.4 => m.noteOn;
-
-                length::second => now;
-            }}
-
-            function void SelectionFX(float masterNote, float length){{
-
-                strumMandolin (masterNote, 0, 0.25, 0.5, length);
-            }}
-
-
-            SelectionFX(NoteToPlay, {1});
-
-        ", note, length));
-    }
-
-
-
-    public void ChunityFAIL() //TODO, send in color value to SelectionFX().
-    {
-        //Chuck + Unity -> Chunity, Interactive Audio
-        this.GetComponent<ChuckSubInstance>().RunCode(@"
-
-            Mandolin m => dac;
-            
-
-            function void strumMandolin ( float freq, float detune, float body, float pluckpos, float length )
-            {{
-                freq => m.freq;
-                detune => m.stringDetune;
-                body => m.bodySize;
-                pluckpos => m.pluckPos;  //good to change
-
-                1.0 => m.noteOn;
-
-                length::second => now;
-            }}
-
-            function void SelectionFX(float masterNote, float length){{
-
-                strumMandolin (masterNote, 1, 0.25, 0.5, length);
-                strumMandolin (masterNote - 19, 1, 0.25, 0.5, length);
-                strumMandolin (masterNote - 61, 1, 0.25, 0.5, length + 0.8);
-            }}
-
-
-            SelectionFX(220, 0.3);
-
-        ");
-    }
+    
 
 
     public void RaycastCube(GameObject cube)
@@ -228,16 +148,12 @@ public class MS_Main : MonoBehaviour {
 
                 if (Input.GetButtonUp("Fire1")) //Click on cube
                 {
-                    
 
                     if (m_AllCubes[i].GetComponent<MS_Bomb>())
                     {
                         //TRIGGERED A BOMB!
-                        m_AllCubes[i].GetComponent<MS_Block>().RunParticleSystem();
-                        StartCoroutine(ShowSolutionAndEnd());
-                        m_AllCubes[i].SetActive(false); //Turn off cube
 
-                        ChunityFAIL();
+                        LoseGame(m_AllCubes[i]);
                         return;
                     }
 
@@ -251,7 +167,14 @@ public class MS_Main : MonoBehaviour {
 
                     //Make noise on object clicked
                     float note = this.GetComponent<ChuckConversions>().ColorToFreqency(m_AllCubes[i].GetComponent<MS_Block>().distanceToBomb);
-                    ChunityStrum(note, 1.2f);
+                    m_Chuck.ChunityStrum(note, 1.2f);
+                }
+
+
+                //Defusing Bomb - 
+                if (Input.GetKeyDown(KeyCode.Space) && m_AllCubes[i].GetComponent<MS_Bomb>() != null)
+                {
+                    FlagFoundBomb();
                 }
             }
             else //Set all other active cubes to reset material after hovered and not clicked
@@ -284,7 +207,6 @@ public class MS_Main : MonoBehaviour {
         {
             mouseCursDragPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
             Vector2 dist = mouseCursDragPos - mouseStartDragPos;
-
         }
     }
 
@@ -292,6 +214,7 @@ public class MS_Main : MonoBehaviour {
 
     private void ShowParticles()
     {
+        Debug.Log("Showing Particles");
         for (var i = 0; i < m_RemovedCubes.Count; i++) //Turn On Particles 
         {
             m_RemovedCubes[i].GetComponent<MS_Block>().particleEffect.GetComponent<ParticleSystem>().Play();
@@ -300,6 +223,7 @@ public class MS_Main : MonoBehaviour {
 
     private IEnumerator ShowSolutionAndEnd()
     {
+        Debug.Log("Showing Solution and Ending");
         ShowParticles(); //Show already clicked on objects
 
         ShowObjectSolution(); //Show color values of objects that have not been clicked
@@ -310,16 +234,33 @@ public class MS_Main : MonoBehaviour {
 
     private void ShowObjectSolution() //Paints objects based on their color values. Used at end of game
     {
+        Debug.Log("Showing End Game Solution");
         for (var i = 0; i < m_AllCubes.Count; i++)
         {
             m_AllCubes[i].GetComponent<MeshRenderer>().material.color = m_AllCubes[i].GetComponent<MS_Block>().materialColor;
         }
     }
 
+    private void WinGame()
+    {
+        StartCoroutine(ShowSolutionAndEnd());
+        m_Chuck.ChunityWIN();
+        Debug.Log("You Win The Game!");
+    }
+
+    private void LoseGame(GameObject bomb)
+    {
+        Debug.Log("Lose Game with: " + bomb.gameObject.name);
+        bomb.GetComponent<MS_Block>().RunParticleSystem(); //Show particle for bomb
+        StartCoroutine(ShowSolutionAndEnd()); //Show all particles and run 'endgame'
+        bomb.SetActive(false); //Turn off cube
+        m_Chuck.ChunityFAIL(); //Play sad audio
+    }
+
     private void EndGame()
     {
+        Debug.Log("End Game");
         m_GameEnded = true;
-        m_GameStarted = false;
         this.GetComponent<MS_CubeMaker>().ResetPlacedMine();
         foreach (GameObject obj in m_AllCubes)
         {
@@ -341,6 +282,11 @@ public class MS_Main : MonoBehaviour {
         m_AllCubes.Clear();
         m_RemovedCubes.Clear();
         m_AllColorEffects.Clear();
+        Debug.Log("Game End Finished");
+
+        m_GameStarted = false; //Game Restart
+
+        Debug.Log("After Game End Reset");
     }
 
     public void FlagFoundBomb()
@@ -349,7 +295,7 @@ public class MS_Main : MonoBehaviour {
 
         if (m_MinesFound == m_BombAmount)
         {
-            print("YOU WON THE GAME");
+            WinGame();
         }
     }
 
